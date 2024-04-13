@@ -5,7 +5,7 @@ import gdown
 import uuid
 import csv
 from common import ROOT_FOLDER
-from cascade import create_cascade
+# from cascade import create_cascade
 
 # Quellen
 #  - How to open the webcam: https://docs.opencv.org/4.x/dd/d43/tutorial_py_video_display.html
@@ -16,7 +16,32 @@ from cascade import create_cascade
 #  - How to create new folders: https://www.geeksforgeeks.org/python-os-mkdir-method/
 
 # This is the data recording pipeline
-def record(args):
+def record():
+
+    cap = cv.VideoCapture(0)
+    if not cap.isOpened():
+        print("Cannot open camera")
+        exit()
+
+    while True:
+        # Capture frame-by-frame
+        ret, frame = cap.read()
+    
+        # if frame is read correctly ret is True
+        if not ret:
+            print("Can't receive frame (stream end?). Exiting ...")
+            break
+        # Our operations on the frame come here
+        gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
+        # Display the resulting frame
+        cv.imshow('frame', gray)
+        if cv.waitKey(1) == ord('q'):
+            break
+    
+    # When everything done, release the capture
+    cap.release()
+    cv.destroyAllWindows()
+
     # TODO: Implement the recording stage of your pipeline
     #   Create missing folders before you store data in them (os.mkdir)
     #   Open The OpenCV VideoCapture Device to retrieve live images from your webcam (cv.VideoCapture)
@@ -25,6 +50,8 @@ def record(args):
     #   Run the cascade on every image to detect possible faces (CascadeClassifier::detectMultiScale)
     #   If there is exactly one face, write the image and the face position to disk in two seperate files (cv.imwrite, csv.writer)
     #   If you have just saved, block saving for 30 consecutive frames to make sure you get good variance of images.
-    if args.folder is None:
-        print("Please specify folder for data to be recorded into")
-        exit()
+    # if args.folder is None:
+    #     print("Please specify folder for data to be recorded into")
+    #     exit()
+
+record()
