@@ -23,6 +23,8 @@ def record():
         print("Cannot open camera")
         exit()
 
+    face_cascade = cv.CascadeClassifier(cv.data.haarcascades + 'haarcascade_frontalface_default.xml')
+
     while True:
         # Capture frame-by-frame
         ret, frame = cap.read()
@@ -33,11 +35,19 @@ def record():
             break
         # Our operations on the frame come here
         gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
+
+        # detect faces
+        faces = face_cascade.detectMultiScale(gray, 1.3, 5)
+
+        for (x,y,w,h) in faces:
+            frame = cv.rectangle(frame, (x,y), (x+w,y+h), (255,0,0), 2)
+            
         # Display the resulting frame
-        cv.imshow('frame', gray)
+        cv.imshow('frame', frame)
+
         if cv.waitKey(1) == ord('q'):
             break
-    
+
     # When everything done, release the capture
     cap.release()
     cv.destroyAllWindows()
