@@ -18,11 +18,11 @@ import csv
 # This is the data recording pipeline
 def record(args):
 
-    # folder = os.path.join('objects', args)
-
+    # create objects folder if it doesn't exist already
     if not os.path.exists('objects'):
         os.mkdir('objects')
         
+    # define the output folder with the chosen name (args)
     output_folder = os.path.join('objects', args)
     os.makedirs(output_folder, exist_ok=True)
 
@@ -62,17 +62,22 @@ def record(args):
 
         frame_count += 1
 
+        # to only save every 30. frame
         if frame_count == 30:
             frame_count = 0
 
+            # when a face is detected
             if len(faces) == 1:
+                # save image to a png file
                 cv.imwrite(os.path.join(output_folder, f"face_{counter}.png"), frame)
-                counter += 1
+                
+                # save coordinates to a csv file with the same name as the image file
+                with open(os.path.join(output_folder, f"face_{counter}" + ".csv"), "w", newline="") as csvfile:
+                    writer = csv.writer(csvfile, delimiter=",")
+                    for x, y, w, h in faces:
+                        writer.writerow([x, y, w, h])
 
-            # with open(os.path.join(os.getcwd(), fname + ".csv"), "w", newline="") as csvfile:
-            #     writer = csv.writer(csvfile, delimiter=",")
-            #     for x, y, w, h in faces:
-            #         writer.writerow([x, y, w, h])
+                counter += 1
 
         if cv.waitKey(1) == ord('q'):
             break
