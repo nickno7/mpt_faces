@@ -18,8 +18,13 @@ import csv
 # This is the data recording pipeline
 def record(args):
 
+    # folder = os.path.join('objects', args)
+
     if not os.path.exists('objects'):
         os.mkdir('objects')
+        
+    output_folder = os.path.join('objects', args)
+    os.makedirs(output_folder, exist_ok=True)
 
     cap = cv.VideoCapture(0)
     if not cap.isOpened():
@@ -28,7 +33,14 @@ def record(args):
 
     face_cascade = cv.CascadeClassifier(cv.data.haarcascades + 'haarcascade_frontalface_default.xml')
 
+    # counter for the image numbers
+    counter = 0
+
+    # counter to wait 30 frames before saving the next image
+    frame_count = 0
+
     while True:
+        
         # Capture frame-by-frame
         ret, frame = cap.read()
     
@@ -48,13 +60,19 @@ def record(args):
         # Display the resulting frame
         cv.imshow('frame', frame)
 
-        if len(faces) == 1:
-            cv.imwrite("test.png", frame)
+        frame_count += 1
 
-        # with open(os.path.join(os.getcwd(), fname + ".csv"), "w", newline="") as csvfile:
-        #     writer = csv.writer(csvfile, delimiter=",")
-        #     for x, y, w, h in faces:
-        #         writer.writerow([x, y, w, h])
+        if frame_count == 30:
+            frame_count = 0
+
+            if len(faces) == 1:
+                cv.imwrite(os.path.join(output_folder, f"face_{counter}.png"), frame)
+                counter += 1
+
+            # with open(os.path.join(os.getcwd(), fname + ".csv"), "w", newline="") as csvfile:
+            #     writer = csv.writer(csvfile, delimiter=",")
+            #     for x, y, w, h in faces:
+            #         writer.writerow([x, y, w, h])
 
         if cv.waitKey(1) == ord('q'):
             break
