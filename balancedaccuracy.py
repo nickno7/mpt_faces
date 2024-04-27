@@ -18,11 +18,13 @@ class BalancedAccuracy:
     def __init__(self, nClasses):
         self.nClasses = nClasses
         self.reset()
+        
         # TODO: Setup internal variables
         # NOTE: It is good practive to all reset() from here to make sure everything is properly initialized
 
     def reset(self):
         self.matrix = np.zeros((self.nClasses, self.nClasses))
+
         # TODO: Reset internal states.
         # Called at the beginning of each epoch
 
@@ -32,7 +34,6 @@ class BalancedAccuracy:
         for true_label, pred_label in zip(groundtruth, predictions):
             self.matrix[true_label][pred_label] += 1
 
-        # self.matrix += self.matrix
         # TODO: Implement the update of internal states
         # based on current network predictios and the groundtruth value.
         #
@@ -48,6 +49,7 @@ class BalancedAccuracy:
             per_class = np.diag(self.matrix) / self.matrix.sum(axis=1)
 
         return np.mean(per_class)
+    
         # TODO: Calculcate and return balanced accuracy 
         # based on current internal state
 
