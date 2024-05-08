@@ -14,8 +14,8 @@ class Net(nn.Module):
         self.conv1 = nn.Conv2d(3, 9, kernel_size=3, padding=1)
         self.conv2 = nn.Conv2d(9, 16, kernel_size=3, padding=1)
 
-        self.fc1 = (16*16*16, 512)
-        self.fc2 = (512, nClasses)
+        self.fc1 = nn.Linear(16*128*128, 512)
+        self.fc2 = nn.Linear(512, nClasses)
 
         # TODO: Implement module constructor.
         # Define network architecture as needed
@@ -25,7 +25,8 @@ class Net(nn.Module):
     def forward(self, x):
         x = self.relu(self.conv1(x))
         x = self.relu(self.conv2(x))
-        x = self.pool(self.flatten(x))
+        x = self.pool(x)
+        x = self.flatten(x)
         x = self.relu(self.fc1(x))
         x = self.fc2(x)
         return x

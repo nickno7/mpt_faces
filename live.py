@@ -9,16 +9,30 @@ from PIL import Image
 # NOTE: This will be the live execution of your pipeline
 
 def live(args):
+    if args.border is None:
+        print("Live mode requires a border value to be set")
+        exit()
+
+    args.border = float(args.border)
+    if args.border < 0 or args.border > 1:
+        print("Border must be between 0 and 1")
+        exit()
+
     checkpoint = torch.load('model.pt')
     net = Net()
     net.load_state_dict(checkpoint['net_state_dict'])
     net.eval()
 
-    face_cascade = cv.CascadeClassifier("HAAR_CASCADE")
+    face_cascade = cv.CascadeClassifier(cv.data.haarcascades + 'haarcascade_frontalface_default.xml')
 
     cap = cv.VideoCapture(0)
     while True:
         _, frame = cap.read()
+
+        border = int(100*args.border)
+
+        frame = cv.copyMakeBorder(frame, border, border, border, border, cv.BORDER_REFLECT)
+
         gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
         faces = face_cascade.detectMultiScale(gray, 1.3, 5)
 
@@ -28,6 +42,10 @@ def live(args):
             output = net(face)
             output = torch.argmax(output, dim=1).item()
             cv.putText(frame, checkpoint["classes"][output], (x + 20, y - 60), cv.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 50), 2, cv.LINE_AA)
+        cv.imshow('frame', frame)
+
+        if cv.waitKey(1) == ord('q'):
+            break
 
 
     # TODO: 
@@ -38,11 +56,3 @@ def live(args):
     #   Run the cascade on each image, crop all faces with border.
     #   Run each cropped face through the network to get a class prediction.
     #   Retrieve the predicted persons name from the checkpoint and display it in the image
-    if args.border is None:
-        print("Live mode requires a border value to be set")
-        exit()
-
-    args.border = float(args.border)
-    if args.border < 0 or args.border > 1:
-        print("Border must be between 0 and 1")
-        exit()
