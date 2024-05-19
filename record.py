@@ -4,7 +4,7 @@ import os
 import gdown
 import uuid
 import csv
-# from common import ROOT_FOLDER
+from common import ROOT_FOLDER
 # from cascade import create_cascade
 
 # Quellen
@@ -17,13 +17,16 @@ import csv
 
 # This is the data recording pipeline
 def record(args):
+    if args.folder is None:
+        print("Please specify folder for data to be recorded into")
+        exit()
 
     # create objects folder if it doesn't exist already
-    if not os.path.exists('objects'):
-        os.mkdir('objects')
+    if not os.path.exists(ROOT_FOLDER):
+        os.mkdir(ROOT_FOLDER)
         
     # define the output folder with the chosen name (args)
-    output_folder = os.path.join('objects', args)
+    output_folder = os.path.join(ROOT_FOLDER, args.folder)
     os.makedirs(output_folder, exist_ok=True)
 
     cap = cv.VideoCapture(0)
@@ -94,10 +97,7 @@ def record(args):
     #   Run the cascade on every image to detect possible faces (CascadeClassifier::detectMultiScale)
     #   If there is exactly one face, write the image and the face position to disk in two seperate files (cv.imwrite, csv.writer)
     #   If you have just saved, block saving for 30 consecutive frames to make sure you get good variance of images.
-    if args.folder is None:
-        print("Please specify folder for data to be recorded into")
-        exit()
     
     
-
-record('test')
+if __name__ == "__main__":
+    record('test')
