@@ -1,72 +1,72 @@
 import os
 import cv2 as cv
-import argparse
+import csv
 import shutil
 import random
+from common import ROOT_FOLDER, TRAIN_FOLDER, VAL_FOLDER
 
-def process_image(image_path, border_factor):
+
+def process_image(image_path, border_factor, csv_file_path):
     frame = cv.imread(image_path)
     if frame is None:
         print(f"Error reading image {image_path}")
         return None
 
-    height, width = frame.shape[:3]
-    top_border = int(border_factor * height)
-    left_border = int(border_factor * width)
-    
-    frame = cv.copyMakeBorder(
-        frame, top_border, top_border, left_border, left_border, cv.BORDER_REFLECT
-    )
-    return frame
+    with open(csv_file_path, "r") as csv_file:
+        csv_reader = csv.reader(csv_file)
+        for row in csv_reader:
+            x, y, w, h = map(int, row)
+
+    pixels = int(float(border_factor) * min(w, h))
+
+    frame = cv.copyMakeBorder(frame, pixels, pixels, pixels, pixels, cv.BORDER_REFLECT)
+
+    x += pixels
+    y += pixels
+
+    cropped_image = frame[y - pixels : y + h + pixels, x - pixels : x + w + pixels]
+    return cropped_image
+
 
 def save_image(image, output_path):
     cv.imwrite(output_path, image)
+
 
 def clear_directory(directory):
     if os.path.exists(directory):
         shutil.rmtree(directory)
     os.makedirs(directory)
 
-def crop_images(base_folder, border, split):
-    train_folder = 'train'
-    val_folder = 'val'
 
-    clear_directory(train_folder)
-    clear_directory(val_folder)
+def crop(args):
+    if args.border is None or not (0 <= float(args.border) <= 1):
+        print("Cropping mode requires a border value between 0 and 1.")
+        return
 
-    for root, dirs, files in os.walk(base_folder):
+    clear_directory(TRAIN_FOLDER)
+    clear_directory(VAL_FOLDER)
+
+    for root, dirs, files in os.walk(ROOT_FOLDER):
         if not files:
             continue
 
         folder_name = os.path.basename(root)
-        train_output_folder = os.path.join(train_folder, folder_name)
-        val_output_folder = os.path.join(val_folder, folder_name)
+        train_output_folder = os.path.join(TRAIN_FOLDER, folder_name)
+        val_output_folder = os.path.join(VAL_FOLDER, folder_name)
         os.makedirs(train_output_folder, exist_ok=True)
         os.makedirs(val_output_folder, exist_ok=True)
 
         for file in files:
-            if not file.endswith('.png'):
+            if not file.endswith(".png"):
                 continue
-            
+
             image_path = os.path.join(root, file)
-            processed_image = process_image(image_path, border)
-            if processed_image is None:
+            csv_file_path = f"{os.path.splitext(image_path)[0]}.csv"
+            cropped_image = process_image(image_path, float(args.border), csv_file_path)
+            if cropped_image is None:
                 continue
 
-            if random.random() < split:
-                output_path = os.path.join(val_output_folder, file)
+            if random.random() < float(args.split):
+                cv.imwrite(os.path.join(val_output_folder, file), cropped_image)
             else:
-                output_path = os.path.join(train_output_folder, file)
-
-            save_image(processed_image, output_path)
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Crop images with border and split into train/val.')
-    parser.add_argument('crop', help='Crop command')
-    parser.add_argument('--border', type=float, required=True, help='Border factor as a percentage of width/height')
-    parser.add_argument('--split', type=float, required=True, help='Fraction of images to go into val folder')
-    args = parser.parse_args()
-
-    if args.crop == 'crop':
-        base_folder = 'objects'
-        crop_images(base_folder, args.border, args.split)
+                cv.imwrite(os.path.join(train_output_folder, file), cropped_image)
