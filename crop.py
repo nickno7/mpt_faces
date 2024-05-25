@@ -12,24 +12,20 @@ def process_image(image_path, border_factor, csv_file_path):
         print(f"Error reading image {image_path}")
         return None
 
+    pixels = int(border_factor * min(frame.shape[:2]))
+
+    frame = cv.copyMakeBorder(frame, pixels, pixels, pixels, pixels, cv.BORDER_REFLECT)
+
     with open(csv_file_path, "r") as csv_file:
         csv_reader = csv.reader(csv_file)
         for row in csv_reader:
             x, y, w, h = map(int, row)
-
-    pixels = int(float(border_factor) * min(w, h))
-
-    frame = cv.copyMakeBorder(frame, pixels, pixels, pixels, pixels, cv.BORDER_REFLECT)
 
     x += pixels
     y += pixels
 
     cropped_image = frame[y - pixels : y + h + pixels, x - pixels : x + w + pixels]
     return cropped_image
-
-
-def save_image(image, output_path):
-    cv.imwrite(output_path, image)
 
 
 def clear_directory(directory):

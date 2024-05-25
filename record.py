@@ -28,7 +28,7 @@ def record(args):
     output_folder = os.path.join(ROOT_FOLDER, args.folder)
     os.makedirs(output_folder, exist_ok=True)
 
-    cap = cv.VideoCapture(1)
+    cap = cv.VideoCapture(0)
     if not cap.isOpened():
         print("Cannot open camera")
         exit()

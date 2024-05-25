@@ -28,7 +28,7 @@ def live(args):
         cv.data.haarcascades + "haarcascade_frontalface_default.xml"
     )
 
-    cap = cv.VideoCapture(1)
+    cap = cv.VideoCapture(0)
     while True:
         _, frame = cap.read()
 
