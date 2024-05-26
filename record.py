@@ -1,9 +1,9 @@
 import cv2 as cv
 import os
 import csv
+import gdown
 from common import ROOT_FOLDER
 
-# from cascade import create_cascade
 
 # Quellen
 #  - How to open the webcam: https://docs.opencv.org/4.x/dd/d43/tutorial_py_video_display.html
@@ -33,9 +33,20 @@ def record(args):
         print("Cannot open camera")
         exit()
 
-    face_cascade = cv.CascadeClassifier(
-        cv.data.haarcascades + "haarcascade_frontalface_default.xml"
-    )
+    # URL of the XML file on Google Drive
+    cascade_url = "https://drive.google.com/uc?id=1x4ejdgmTQMEtOMLwdNkKIHxkUYnSLabl"
+
+    cascade_file = "haarcascade_frontalface_default.xml"
+
+    # Check if the cascade file already exists locally
+    if not os.path.exists(cascade_file):
+        # If the file does not exist, download it from Google Drive
+        print("Downloading the cascade file...")
+        gdown.download(cascade_url, cascade_file)
+    else:
+        print("File already exists")
+
+    face_cascade = cv.CascadeClassifier(cv.data.haarcascades + cascade_file)
 
     # counter for the image numbers
     counter = 0
@@ -101,7 +112,3 @@ def record(args):
     #   Run the cascade on every image to detect possible faces (CascadeClassifier::detectMultiScale)
     #   If there is exactly one face, write the image and the face position to disk in two seperate files (cv.imwrite, csv.writer)
     #   If you have just saved, block saving for 30 consecutive frames to make sure you get good variance of images.
-
-
-if __name__ == "__main__":
-    record("test")
