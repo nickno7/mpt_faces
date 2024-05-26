@@ -1,10 +1,8 @@
-import numpy as np
 import cv2 as cv
 import os
-import gdown
-import uuid
 import csv
 from common import ROOT_FOLDER
+
 # from cascade import create_cascade
 
 # Quellen
@@ -15,6 +13,7 @@ from common import ROOT_FOLDER
 #  - How to read/write CSV files: https://docs.python.org/3/library/csv.html
 #  - How to create new folders: https://www.geeksforgeeks.org/python-os-mkdir-method/
 
+
 # This is the data recording pipeline
 def record(args):
     if args.folder is None:
@@ -24,7 +23,7 @@ def record(args):
     # create objects folder if it doesn't exist already
     if not os.path.exists(ROOT_FOLDER):
         os.mkdir(ROOT_FOLDER)
-        
+
     # define the output folder with the chosen name (args)
     output_folder = os.path.join(ROOT_FOLDER, args.folder)
     os.makedirs(output_folder, exist_ok=True)
@@ -34,7 +33,9 @@ def record(args):
         print("Cannot open camera")
         exit()
 
-    face_cascade = cv.CascadeClassifier(cv.data.haarcascades + 'haarcascade_frontalface_default.xml')
+    face_cascade = cv.CascadeClassifier(
+        cv.data.haarcascades + "haarcascade_frontalface_default.xml"
+    )
 
     # counter for the image numbers
     counter = 0
@@ -43,10 +44,9 @@ def record(args):
     frame_count = 0
 
     while True:
-        
         # Capture frame-by-frame
         ret, frame = cap.read()
-    
+
         # if frame is read correctly ret is True
         if not ret:
             print("Can't receive frame (stream end?). Exiting ...")
@@ -56,12 +56,6 @@ def record(args):
 
         # detect faces
         faces = face_cascade.detectMultiScale(gray, 1.3, 5)
-
-        for (x,y,w,h) in faces:
-            cv.rectangle(frame, (x,y), (x+w,y+h), (255,0,0), 2)
-            
-        # Display the resulting frame
-        cv.imshow('frame', frame)
 
         frame_count += 1
 
@@ -73,16 +67,26 @@ def record(args):
             if len(faces) == 1:
                 # save image to a png file
                 cv.imwrite(os.path.join(output_folder, f"face_{counter}.png"), frame)
-                
+
                 # save coordinates to a csv file with the same name as the image file
-                with open(os.path.join(output_folder, f"face_{counter}" + ".csv"), "w", newline="") as csvfile:
+                with open(
+                    os.path.join(output_folder, f"face_{counter}" + ".csv"),
+                    "w",
+                    newline="",
+                ) as csvfile:
                     writer = csv.writer(csvfile, delimiter=",")
                     for x, y, w, h in faces:
                         writer.writerow([x, y, w, h])
 
                 counter += 1
 
-        if cv.waitKey(1) == ord('q'):
+        for x, y, w, h in faces:
+            cv.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
+
+        # Display the resulting frame
+        cv.imshow("frame", frame)
+
+        if cv.waitKey(1) == ord("q"):
             break
 
     # When everything done, release the capture
@@ -97,7 +101,7 @@ def record(args):
     #   Run the cascade on every image to detect possible faces (CascadeClassifier::detectMultiScale)
     #   If there is exactly one face, write the image and the face position to disk in two seperate files (cv.imwrite, csv.writer)
     #   If you have just saved, block saving for 30 consecutive frames to make sure you get good variance of images.
-    
-    
+
+
 if __name__ == "__main__":
-    record('test')
+    record("test")

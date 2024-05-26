@@ -1,12 +1,13 @@
 import cv2 as cv
 import torch
-import os
 from network import Net
+
 # from cascade import create_cascade
 from transforms import ValidationTransform
 from PIL import Image
 
 # NOTE: This will be the live execution of your pipeline
+
 
 def live(args):
     if args.border is None:
@@ -18,37 +19,52 @@ def live(args):
         print("Border must be between 0 and 1")
         exit()
 
-    checkpoint = torch.load('model.pt')
-    net = Net()
-    net.load_state_dict(checkpoint['net_state_dict'])
+    checkpoint = torch.load("model.pt")
+    net = Net(len(checkpoint["classes"]))
+    net.load_state_dict(checkpoint["model"])
     net.eval()
 
-    face_cascade = cv.CascadeClassifier(cv.data.haarcascades + 'haarcascade_frontalface_default.xml')
+    face_cascade = cv.CascadeClassifier(
+        cv.data.haarcascades + "haarcascade_frontalface_default.xml"
+    )
 
     cap = cv.VideoCapture(0)
     while True:
         _, frame = cap.read()
 
-        border = int(100*args.border)
+        border = int(min(frame.shape[:2]) * args.border)
 
-        frame = cv.copyMakeBorder(frame, border, border, border, border, cv.BORDER_REFLECT)
+        frame = cv.copyMakeBorder(
+            frame, border, border, border, border, cv.BORDER_REFLECT
+        )
 
         gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
         faces = face_cascade.detectMultiScale(gray, 1.3, 5)
 
-        for face in faces:
-            x, y, w, h = [v.item() for v in face]
-            cv.rectangle(frame, (x,y), (x+w,y+h), (0,255,0), 2)
+        for x, y, w, h in faces:
+            face = frame[y : y + h, x : x + w]
+            face = Image.fromarray(cv.cvtColor(face, cv.COLOR_BGR2RGB))
+            face = ValidationTransform(face)
+
             output = net(face)
             output = torch.argmax(output, dim=1).item()
-            cv.putText(frame, checkpoint["classes"][output], (x + 20, y - 60), cv.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 50), 2, cv.LINE_AA)
-        cv.imshow('frame', frame)
 
-        if cv.waitKey(1) == ord('q'):
+            name = checkpoint["classes"][output]
+
+            font = cv.FONT_HERSHEY_SIMPLEX
+
+            cv.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
+            cv.rectangle(frame, (x, y - 32), (x + w, y), (255, 0, 0), -1)
+            cv.putText(
+                frame, name, (x + 8, y - 6), font, 1, (255, 255, 255), 2, cv.LINE_AA
+            )
+
+        cv.imshow("frame", frame)
+
+        if cv.waitKey(1) == ord("q"):
             break
 
-
-    # TODO: 
+    # TODO:
     #   Load the model checkpoint from a previous training session (check code in train.py)
     #   Initialize the face recognition cascade again (reuse code if possible)
     #   Also, create a video capture device to retrieve live footage from the webcam.
