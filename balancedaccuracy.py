@@ -97,7 +97,7 @@ if __name__ == "__main__":
     predictions_epoch2 = torch.tensor([np.argmax(p) for p in predictions_epoch2])
     print(
         balanced_accuracy_score(
-            np.hstack((groundtruth_epoch1, groundtruth_epoch2)),
-            np.hstack((predictions_epoch1, predictions_epoch2)),
+            np.hstack((groundtruth_epoch1)),
+            np.hstack((predictions_epoch1)),
         )
     )
